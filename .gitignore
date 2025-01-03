@@ -1,0 +1,20 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/assessment-api-developer/v17
+/.vs/assessment-api-developer/FileContentIndex
+/assessment-api-developer/bin/assessment-platform-developer.dll
+/assessment-api-developer/bin/assessment-platform-developer.pdb
+/assessment-api-developer/bin
+/assessment-api-developer/obj/Debug/assessment-api-developer.csproj.AssemblyReference.cache
+/assessment-api-developer/obj/Debug/assessment-api-developer.csproj.CoreCompileInputs.cache
+/assessment-api-developer/obj/Debug/assessment-api-developer.csproj.FileListAbsolute.txt
+/assessment-api-developer/obj/Debug/assessment-platform-developer.dll
+/assessment-api-developer/obj/Debug/assessment-platform-developer.pdb
+/assessment-api-developer/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/assessment-api-developer/obj/Debug
+/assessment-api-developer.Tests/obj/Debug/assessment-api-developer.Tests.csproj.AssemblyReference.cache
+/assessment-api-developer.Tests/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/packages
+/assessment-api-developer.Tests/.vs
