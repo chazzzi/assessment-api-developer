@@ -1,13 +1,12 @@
 ﻿using assessment_platform_developer.Models;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 
 namespace assessment_platform_developer.Repositories
 {
 	public interface ICustomerRepository
 	{
-		IEnumerable<Customer> GetAll();
+		IEnumerable<Customer> GetAllAsync();
 		Customer Get(int id);
 		void Add(Customer customer);
 		void Update(Customer customer);
@@ -19,7 +18,7 @@ namespace assessment_platform_developer.Repositories
 		// Assuming you have a DbContext named 'context'
 		private readonly List<Customer> customers = new List<Customer>();
 
-		public IEnumerable<Customer> GetAll()
+		public IEnumerable<Customer> GetAllAsync()
 		{
 			return customers;
 		}

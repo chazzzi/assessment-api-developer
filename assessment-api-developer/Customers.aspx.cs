@@ -7,6 +7,9 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using assessment_platform_developer.Services;
 using Container = SimpleInjector.Container;
+using System.Threading.Tasks;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace assessment_platform_developer
 {
@@ -14,26 +17,45 @@ namespace assessment_platform_developer
 	{
 		private static List<Customer> customers = new List<Customer>();
 
-		protected void Page_Load(object sender, EventArgs e)
-		{
-			if (!IsPostBack)
-			{
-				var testContainer = (Container)HttpContext.Current.Application["DIContainer"];
-				var customerService = testContainer.GetInstance<ICustomerService>();
+        protected async void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                // Fetch customers asynchronously
+                var allCustomers = await FetchCustomersFromApi();
+                ViewState["Customers"] = allCustomers;
+            }
+            else
+            {
+                customers = (List<Customer>)ViewState["Customers"];
+            }
 
-				var allCustomers = customerService.GetAllCustomers();
-				ViewState["Customers"] = allCustomers;
-			}
-			else
-			{
-				customers = (List<Customer>)ViewState["Customers"];
-			}
+            PopulateCustomerListBox();
+            PopulateCustomerDropDownLists();
+        }
 
-			PopulateCustomerListBox();
-			PopulateCustomerDropDownLists();
-		}
+        private async Task<List<Customer>> FetchCustomersFromApi()
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:44358/api/");
 
-		private void PopulateCustomerDropDownLists()
+                var response = await client.GetAsync("customers");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    var customers = JsonConvert.DeserializeObject<List<Customer>>(jsonString);
+                    return customers;
+                }
+                else
+                {
+                    return new List<Customer>();
+                }
+            }
+        }
+
+        private void PopulateCustomerDropDownLists()
 		{
 
 			var countryList = Enum.GetValues(typeof(Countries))

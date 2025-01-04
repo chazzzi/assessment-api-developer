@@ -12,6 +12,7 @@ using System.Web.UI;
 using Microsoft.Web.Infrastructure.DynamicModuleHelper;
 using assessment_platform_developer.Services;
 using SimpleInjector.Integration.Web;
+using System.Web.Http;
 
 namespace assessment_platform_developer
 {
@@ -61,9 +62,10 @@ namespace assessment_platform_developer
 			// Code that runs on application startup
 			RouteConfig.RegisterRoutes(RouteTable.Routes);
 			BundleConfig.RegisterBundles(BundleTable.Bundles);
+            GlobalConfiguration.Configure(WebApiConfig.Register);
 
-
-			Bootstrap();
+            EnableCors();
+            Bootstrap();
 		}
 
 		private static void Bootstrap()
@@ -89,7 +91,15 @@ namespace assessment_platform_developer
 			HttpContext.Current.Application["DIContainer"] = container;
 		}
 
-		private static void RegisterWebPages(Container container)
+        private static void EnableCors()
+        {
+            var config = GlobalConfiguration.Configuration;
+
+            // Enable CORS for all origins, methods, and headers
+            config.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute("*", "*", "*"));
+        }
+
+        private static void RegisterWebPages(Container container)
 		{
 			var pageTypes =
 				from assembly in BuildManager.GetReferencedAssemblies().Cast<Assembly>()
