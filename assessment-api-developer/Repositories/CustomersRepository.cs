@@ -1,6 +1,5 @@
 ﻿using assessment_platform_developer.Models;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 
 namespace assessment_platform_developer.Repositories
@@ -39,10 +38,7 @@ namespace assessment_platform_developer.Repositories
             var existingCustomer = customers.FirstOrDefault(c => c.ID == customer.ID);
             if (existingCustomer != null)
             {
-                // Update properties of existingCustomer based on the properties of customer
-                // For example:
                 existingCustomer.Name = customer.Name;
-                // Repeat for other properties
             }
         }
 

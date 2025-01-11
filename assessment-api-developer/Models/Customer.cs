@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
@@ -103,21 +104,37 @@ namespace assessment_platform_developer.Models
 	public class Customer
 	{
 		public int ID { get; set; }
-		public string Name { get; set; }
+
+        [Required]
+        public string Name { get; set; }
 		public string Address { get; set; }
-		public string Email { get; set; }
-		public string Phone { get; set; }
+
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Phone]
+        public string Phone { get; set; }
+
 		public string City { get; set; }
-		public string State { get; set; }
-		public string Zip { get; set; }
-		public string Country { get; set; }
+
+        [Required]
+        public string State { get; set; }
+
+        [Required]
+        public string Zip { get; set; }
+
+        [Required]
+        public string Country { get; set; }
 		public string Notes { get; set; }
 		public string ContactName { get; set; }
-		public string ContactPhone { get; set; }
-		public string ContactEmail { get; set; }
+
+        [Phone]
+        public string ContactPhone { get; set; }
+
+        [EmailAddress]
+        public string ContactEmail { get; set; }
 		public string ContactTitle { get; set; }
 		public string ContactNotes { get; set; }
-
 	}
 
 	public class CustomerDBContext : DbContext
