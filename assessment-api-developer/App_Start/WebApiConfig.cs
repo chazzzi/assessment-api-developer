@@ -1,5 +1,4 @@
 using System.Web.Http;
-using System.Web.Http.Cors;
 
 namespace assessment_platform_developer
 {
@@ -7,17 +6,15 @@ namespace assessment_platform_developer
     {
         public static void Register(HttpConfiguration config)
         {
-            System.Diagnostics.Debug.WriteLine("Web API Routes Registered");
-            config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
+            // Enable attribute routing
             config.MapHttpAttributeRoutes();
+
+            // Default route
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
-            config.Formatters.JsonFormatter.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-            config.Formatters.Remove(config.Formatters.XmlFormatter);
         }
-
     }
 }
