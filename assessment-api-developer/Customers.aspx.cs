@@ -81,6 +81,8 @@ namespace assessment_platform_developer
 
             try
             {
+                CustomersDDL.Items.Add(new ListItem("Add New Customer", "0"));
+
                 // Fetch customers from the API
                 var allCustomers = await FetchCustomersFromApi();
 
@@ -92,12 +94,10 @@ namespace assessment_platform_developer
                         CustomersDDL.Items.Add(new ListItem(customer.Name, customer.ID.ToString()));
                     }
 
-                    // Optionally, set the first item as default
                     CustomersDDL.SelectedIndex = 0;
                 }
                 else
                 {
-                    // Add a default option if no customers are available
                     CustomersDDL.Items.Add(new ListItem("No customers available", ""));
                 }
             }
@@ -135,6 +135,12 @@ namespace assessment_platform_developer
                             ContactName.Text = selectedCustomer.ContactName;
                             ContactPhone.Text = selectedCustomer.ContactPhone;
                             ContactEmail.Text = selectedCustomer.ContactEmail;
+
+                            // Update UI for editing
+                            AddButton.Visible = false;
+                            UpdateButton.Visible = true;
+                            DeleteButton.Visible = true;
+                            CustomerActionLabel.InnerText = "Edit customer";
                         }
                         else
                         {
@@ -148,7 +154,6 @@ namespace assessment_platform_developer
                 }
             }
         }
-
 
         private async Task<Customer> FetchCustomerByIdFromApi(int customerId)
         {
@@ -203,9 +208,8 @@ namespace assessment_platform_developer
                     {
                         string responseContent = await response.Content.ReadAsStringAsync();
 
-                        customers.Add(customer);
-                        CustomersDDL.Items.Add(new ListItem(customer.Name));
-
+                        await PopulateCustomerListBox();
+                        ResetForm();
                         Response.Write("<script>alert('Customer added successfully!');</script>");
                     }
                     else
@@ -223,93 +227,122 @@ namespace assessment_platform_developer
         }
         protected async void UpdateButton_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
+            if (int.TryParse(CustomersDDL.SelectedValue, out int customerId) && customerId > 0)
             {
-                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
-                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
-
-                if (selectedCustomer != null)
+                var updatedCustomer = new Customer
                 {
-                    // Update customer object with form data
-                    selectedCustomer.Name = CustomerName.Text;
-                    selectedCustomer.Address = CustomerAddress.Text;
-                    selectedCustomer.Email = CustomerEmail.Text;
-                    selectedCustomer.Phone = CustomerPhone.Text;
-                    selectedCustomer.City = CustomerCity.Text;
-                    selectedCustomer.State = StateDropDownList.SelectedValue;
-                    selectedCustomer.Zip = CustomerZip.Text;
-                    selectedCustomer.Country = CountryDropDownList.SelectedValue;
-                    selectedCustomer.Notes = CustomerNotes.Text;
-                    selectedCustomer.ContactName = ContactName.Text;
-                    selectedCustomer.ContactPhone = ContactPhone.Text;
-                    selectedCustomer.ContactEmail = ContactEmail.Text;
+                    ID = customerId, // Use the selected customer's ID
+                    Name = CustomerName.Text,
+                    Address = CustomerAddress.Text,
+                    Email = CustomerEmail.Text,
+                    Phone = CustomerPhone.Text,
+                    City = CustomerCity.Text,
+                    State = StateDropDownList.SelectedValue,
+                    Zip = CustomerZip.Text,
+                    Country = CountryDropDownList.SelectedValue,
+                    Notes = CustomerNotes.Text,
+                    ContactName = ContactName.Text,
+                    ContactPhone = ContactPhone.Text,
+                    ContactEmail = ContactEmail.Text
+                };
 
-                    string apiUrl = $"https://localhost:44358/api/customers/{selectedCustomer.ID}";
+                string apiUrl = $"https://localhost:44358/api/customers/{customerId}";
 
-                    try
+                try
+                {
+                    using (var httpClient = new HttpClient())
                     {
-                        using (var httpClient = new HttpClient())
-                        {
-                            string jsonData = JsonConvert.SerializeObject(selectedCustomer);
-                            var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                            HttpResponseMessage response = await httpClient.PutAsync(apiUrl, content);
+                        string jsonData = JsonConvert.SerializeObject(updatedCustomer);
+                        var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
-                            if (response.IsSuccessStatusCode)
-                            {
-                                Response.Write("<script>alert('Customer updated successfully!');</script>");
-                            }
-                            else
-                            {
-                                string errorContent = await response.Content.ReadAsStringAsync();
-                                Response.Write($"<script>alert('Failed to update customer: {errorContent}');</script>");
-                            }
+                        HttpResponseMessage response = await httpClient.PutAsync(apiUrl, content);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            // Refresh the dropdown and reset the form
+                            await PopulateCustomerListBox();
+                            ResetForm();
+
+                            Response.Write("<script>alert('Customer updated successfully!');</script>");
+                        }
+                        else
+                        {
+                            string errorContent = await response.Content.ReadAsStringAsync();
+                            Response.Write($"<script>alert('Failed to update customer: {errorContent}');</script>");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
                 }
             }
+            else
+            {
+                Response.Write("<script>alert('Please select a valid customer to update.');</script>");
+            }
         }
+
         protected async void DeleteButton_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
+            if (int.TryParse(CustomersDDL.SelectedValue, out int customerId) && customerId > 0)
             {
-                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
-                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
+                string apiUrl = $"https://localhost:44358/api/customers/{customerId}";
 
-                if (selectedCustomer != null)
+                try
                 {
-                    string apiUrl = $"https://localhost:44358/api/customers/{selectedCustomer.ID}";
-
-                    try
+                    using (var httpClient = new HttpClient())
                     {
-                        using (var httpClient = new HttpClient())
+                        HttpResponseMessage response = await httpClient.DeleteAsync(apiUrl);
+
+                        if (response.IsSuccessStatusCode)
                         {
-                            HttpResponseMessage response = await httpClient.DeleteAsync(apiUrl);
+                            // Refresh the dropdown and reset the form
+                            await PopulateCustomerListBox();
+                            ResetForm();
 
-                            if (response.IsSuccessStatusCode)
-                            {
-                                customers.Remove(selectedCustomer);
-                                CustomersDDL.Items.Remove(CustomersDDL.SelectedItem);
-
-                                Response.Write("<script>alert('Customer deleted successfully!');</script>");
-                            }
-                            else
-                            {
-                                string errorContent = await response.Content.ReadAsStringAsync();
-                                Response.Write($"<script>alert('Failed to delete customer: {errorContent}');</script>");
-                            }
+                            Response.Write("<script>alert('Customer deleted successfully!');</script>");
+                        }
+                        else
+                        {
+                            string errorContent = await response.Content.ReadAsStringAsync();
+                            Response.Write($"<script>alert('Failed to delete customer: {errorContent}');</script>");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
-                    }
                 }
+                catch (Exception ex)
+                {
+                    Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
+                }
+            }
+            else
+            {
+                Response.Write("<script>alert('Please select a valid customer to delete.');</script>");
             }
         }
 
+        private void ResetForm()
+        {
+            // Clear all form fields
+            CustomerName.Text = string.Empty;
+            CustomerAddress.Text = string.Empty;
+            CustomerEmail.Text = string.Empty;
+            CustomerPhone.Text = string.Empty;
+            CustomerCity.Text = string.Empty;
+            StateDropDownList.SelectedIndex = 0;
+            CustomerZip.Text = string.Empty;
+            CountryDropDownList.SelectedIndex = 0;
+            CustomerNotes.Text = string.Empty;
+            ContactName.Text = string.Empty;
+            ContactPhone.Text = string.Empty;
+            ContactEmail.Text = string.Empty;
+
+            // Reset UI for adding a new customer
+            AddButton.Visible = true;
+            UpdateButton.Visible = false;
+            DeleteButton.Visible = false;
+            CustomerActionLabel.InnerText = "Add customer";
+            CustomersDDL.SelectedIndex = 0;
+        }
     }
 }
