@@ -20,17 +20,9 @@ namespace assessment_platform_developer
         {
             if (!IsPostBack)
             {
-                // Fetch customers asynchronously
-                var allCustomers = await FetchCustomersFromApi();
-                ViewState["Customers"] = allCustomers;
+                await PopulateCustomerListBox();
+                PopulateCustomerDropDownLists();
             }
-            else
-            {
-                customers = (List<Customer>)ViewState["Customers"];
-            }
-
-            await PopulateCustomerListBox();
-            PopulateCustomerDropDownLists();
         }
 
         private async Task<List<Customer>> FetchCustomersFromApi()
@@ -89,48 +81,91 @@ namespace assessment_platform_developer
 
             try
             {
+                // Fetch customers from the API
                 var allCustomers = await FetchCustomersFromApi();
 
                 if (allCustomers.Any())
                 {
+                    // Populate the dropdown with customer data
                     foreach (var customer in allCustomers)
                     {
                         CustomersDDL.Items.Add(new ListItem(customer.Name, customer.ID.ToString()));
                     }
+
+                    // Optionally, set the first item as default
+                    CustomersDDL.SelectedIndex = 0;
                 }
                 else
                 {
-                    CustomersDDL.Items.Add(new ListItem("No customers data."));
+                    // Add a default option if no customers are available
+                    CustomersDDL.Items.Add(new ListItem("No customers available", ""));
                 }
             }
             catch (Exception ex)
             {
-                CustomersDDL.Items.Add(new ListItem($"Error: {ex.Message}"));
+                // Handle API errors
+                CustomersDDL.Items.Add(new ListItem($"Error: {ex.Message}", ""));
             }
         }
 
-        protected void CustomersDDL_SelectedIndexChanged(object sender, EventArgs e)
+        protected async void CustomersDDL_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
             {
-                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
-                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
-
-                if (selectedCustomer != null)
+                int customerId;
+                if (int.TryParse(CustomersDDL.SelectedValue, out customerId))
                 {
-                    // Populate form fields
-                    CustomerName.Text = selectedCustomer.Name;
-                    CustomerAddress.Text = selectedCustomer.Address;
-                    CustomerEmail.Text = selectedCustomer.Email;
-                    CustomerPhone.Text = selectedCustomer.Phone;
-                    CustomerCity.Text = selectedCustomer.City;
-                    StateDropDownList.SelectedValue = selectedCustomer.State;
-                    CustomerZip.Text = selectedCustomer.Zip;
-                    CountryDropDownList.SelectedValue = selectedCustomer.Country;
-                    CustomerNotes.Text = selectedCustomer.Notes;
-                    ContactName.Text = selectedCustomer.ContactName;
-                    ContactPhone.Text = selectedCustomer.ContactPhone;
-                    ContactEmail.Text = selectedCustomer.ContactEmail;
+                    try
+                    {
+                        // Fetch customer details from the API by ID
+                        var selectedCustomer = await FetchCustomerByIdFromApi(customerId);
+
+                        if (selectedCustomer != null)
+                        {
+                            // Populate fields
+                            CustomerName.Text = selectedCustomer.Name;
+                            CustomerAddress.Text = selectedCustomer.Address;
+                            CustomerEmail.Text = selectedCustomer.Email;
+                            CustomerPhone.Text = selectedCustomer.Phone;
+                            CustomerCity.Text = selectedCustomer.City;
+                            StateDropDownList.SelectedValue = selectedCustomer.State;
+                            CustomerZip.Text = selectedCustomer.Zip;
+                            CountryDropDownList.SelectedValue = selectedCustomer.Country;
+                            CustomerNotes.Text = selectedCustomer.Notes;
+                            ContactName.Text = selectedCustomer.ContactName;
+                            ContactPhone.Text = selectedCustomer.ContactPhone;
+                            ContactEmail.Text = selectedCustomer.ContactEmail;
+                        }
+                        else
+                        {
+                            Response.Write("<script>alert('Customer not found');</script>");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.Write($"<script>alert('Error fetching customer: {ex.Message}');</script>");
+                    }
+                }
+            }
+        }
+
+
+        private async Task<Customer> FetchCustomerByIdFromApi(int customerId)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:44358/api/");
+
+                var response = await client.GetAsync($"customers/{customerId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Customer>(jsonString);
+                }
+                else
+                {
+                    throw new Exception($"Failed to fetch customer: {response.ReasonPhrase}");
                 }
             }
         }
@@ -186,5 +221,95 @@ namespace assessment_platform_developer
                 Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
             }
         }
-	}
+        protected async void UpdateButton_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
+            {
+                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
+                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
+
+                if (selectedCustomer != null)
+                {
+                    // Update customer object with form data
+                    selectedCustomer.Name = CustomerName.Text;
+                    selectedCustomer.Address = CustomerAddress.Text;
+                    selectedCustomer.Email = CustomerEmail.Text;
+                    selectedCustomer.Phone = CustomerPhone.Text;
+                    selectedCustomer.City = CustomerCity.Text;
+                    selectedCustomer.State = StateDropDownList.SelectedValue;
+                    selectedCustomer.Zip = CustomerZip.Text;
+                    selectedCustomer.Country = CountryDropDownList.SelectedValue;
+                    selectedCustomer.Notes = CustomerNotes.Text;
+                    selectedCustomer.ContactName = ContactName.Text;
+                    selectedCustomer.ContactPhone = ContactPhone.Text;
+                    selectedCustomer.ContactEmail = ContactEmail.Text;
+
+                    string apiUrl = $"https://localhost:44358/api/customers/{selectedCustomer.ID}";
+
+                    try
+                    {
+                        using (var httpClient = new HttpClient())
+                        {
+                            string jsonData = JsonConvert.SerializeObject(selectedCustomer);
+                            var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                            HttpResponseMessage response = await httpClient.PutAsync(apiUrl, content);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                Response.Write("<script>alert('Customer updated successfully!');</script>");
+                            }
+                            else
+                            {
+                                string errorContent = await response.Content.ReadAsStringAsync();
+                                Response.Write($"<script>alert('Failed to update customer: {errorContent}');</script>");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
+                    }
+                }
+            }
+        }
+        protected async void DeleteButton_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
+            {
+                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
+                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
+
+                if (selectedCustomer != null)
+                {
+                    string apiUrl = $"https://localhost:44358/api/customers/{selectedCustomer.ID}";
+
+                    try
+                    {
+                        using (var httpClient = new HttpClient())
+                        {
+                            HttpResponseMessage response = await httpClient.DeleteAsync(apiUrl);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                customers.Remove(selectedCustomer);
+                                CustomersDDL.Items.Remove(CustomersDDL.SelectedItem);
+
+                                Response.Write("<script>alert('Customer deleted successfully!');</script>");
+                            }
+                            else
+                            {
+                                string errorContent = await response.Content.ReadAsStringAsync();
+                                Response.Write($"<script>alert('Failed to delete customer: {errorContent}');</script>");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
+                    }
+                }
+            }
+        }
+
+    }
 }

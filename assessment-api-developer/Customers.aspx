@@ -61,11 +61,14 @@
 		<div class="container body-content">
 			<h2>Customer Registry</h2>
 			<asp:DropDownList ID="CustomersDDL" runat="server" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="CustomersDDL_SelectedIndexChanged">
-</asp:DropDownList>
+				</asp:DropDownList>
 
-
+			<div class="form-group">
+				<asp:Button ID="UpdateButton" class="btn btn-warning btn-md" runat="server" Text="Update" OnClick="UpdateButton_Click" />
+				<asp:Button ID="DeleteButton" class="btn btn-danger btn-md" runat="server" Text="Delete" OnClick="DeleteButton_Click" />
+			</div>
 		</div>
-		
+	</div>
 
 		<div class="container body-content">
 			<div class="card">
