@@ -29,7 +29,7 @@ namespace assessment_platform_developer
                 customers = (List<Customer>)ViewState["Customers"];
             }
 
-            PopulateCustomerListBox();
+            await PopulateCustomerListBox();
             PopulateCustomerDropDownLists();
         }
 
@@ -83,19 +83,57 @@ namespace assessment_platform_developer
 			StateDropDownList.Items.AddRange(provinceList);
 		}
 
-		protected void PopulateCustomerListBox()
-		{
-			CustomersDDL.Items.Clear();
-			var storedCustomers = customers.Select(c => new ListItem(c.Name)).ToArray();
-			if (storedCustomers.Length != 0)
-			{
-				CustomersDDL.Items.AddRange(storedCustomers);
-				CustomersDDL.SelectedIndex = 0;
-				return;
-			}
+        protected async Task PopulateCustomerListBox()
+        {
+            CustomersDDL.Items.Clear();
 
-			CustomersDDL.Items.Add(new ListItem("Add new customer"));
-		}
+            try
+            {
+                var allCustomers = await FetchCustomersFromApi();
+
+                if (allCustomers.Any())
+                {
+                    foreach (var customer in allCustomers)
+                    {
+                        CustomersDDL.Items.Add(new ListItem(customer.Name, customer.ID.ToString()));
+                    }
+                }
+                else
+                {
+                    CustomersDDL.Items.Add(new ListItem("No customers data."));
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomersDDL.Items.Add(new ListItem($"Error: {ex.Message}"));
+            }
+        }
+
+        protected void CustomersDDL_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(CustomersDDL.SelectedValue))
+            {
+                string selectedCustomerName = CustomersDDL.SelectedItem.Text;
+                var selectedCustomer = customers.FirstOrDefault(c => c.Name == selectedCustomerName);
+
+                if (selectedCustomer != null)
+                {
+                    // Populate form fields
+                    CustomerName.Text = selectedCustomer.Name;
+                    CustomerAddress.Text = selectedCustomer.Address;
+                    CustomerEmail.Text = selectedCustomer.Email;
+                    CustomerPhone.Text = selectedCustomer.Phone;
+                    CustomerCity.Text = selectedCustomer.City;
+                    StateDropDownList.SelectedValue = selectedCustomer.State;
+                    CustomerZip.Text = selectedCustomer.Zip;
+                    CountryDropDownList.SelectedValue = selectedCustomer.Country;
+                    CustomerNotes.Text = selectedCustomer.Notes;
+                    ContactName.Text = selectedCustomer.ContactName;
+                    ContactPhone.Text = selectedCustomer.ContactPhone;
+                    ContactEmail.Text = selectedCustomer.ContactEmail;
+                }
+            }
+        }
 
         protected async void AddButton_Click(object sender, EventArgs e)
         {
