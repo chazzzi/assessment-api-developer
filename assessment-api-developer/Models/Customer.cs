@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
 
 namespace assessment_platform_developer.Models
 {
@@ -103,7 +99,8 @@ namespace assessment_platform_developer.Models
 	[Serializable]
 	public class Customer
 	{
-		public int ID { get; set; }
+        [Key]
+        public int ID { get; set; }
 
         [Required]
         public string Name { get; set; }
@@ -135,10 +132,5 @@ namespace assessment_platform_developer.Models
         public string ContactEmail { get; set; }
 		public string ContactTitle { get; set; }
 		public string ContactNotes { get; set; }
-	}
-
-	public class CustomerDBContext : DbContext
-	{
-		public DbSet<Customer> Customers { get; set; }
 	}
 }

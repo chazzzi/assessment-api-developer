@@ -1,54 +1,78 @@
-﻿using assessment_platform_developer.Models;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using assessment_platform_developer.Models;
 
-namespace assessment_platform_developer.Repositories
+public class CustomerRepository : ICustomerRepository
 {
-    public interface ICustomerRepository
+    private readonly AssessmentDbContext _context;
+    public CustomerRepository(AssessmentDbContext context)
     {
-        IEnumerable<Customer> GetAll();
-        Customer Get(int id);
-        void Add(Customer customer);
-        void Update(Customer customer);
-        void Delete(int id);
+        _context = context ?? throw new ArgumentNullException(nameof(context), "AssessmentDbContext cannot be null.");
     }
 
-    public class CustomerRepository : ICustomerRepository
+    public IEnumerable<Customer> GetAllCustomers()
     {
-        // Assuming you have a DbContext named 'context'
-        private readonly List<Customer> customers = new List<Customer>();
+        return _context.Customers.ToList();
+    }
 
-        public IEnumerable<Customer> GetAll()
+    public Customer GetCustomer(int id)
+    {
+        var customer = _context.Customers.Find(id);
+        if (customer == null)
         {
-            return customers;
+            throw new KeyNotFoundException($"Customer with ID {id} not found.");
+        }
+        return customer;
+    }
+
+    public void AddCustomer(Customer customer)
+    {
+        if (customer == null)
+        {
+            throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
         }
 
-        public Customer Get(int id)
+        try
         {
-            return customers.FirstOrDefault(c => c.ID == id);
+            _context.Customers.Add(customer);
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            // Log the exception to debug the issue
+            System.Diagnostics.Debug.WriteLine($"Error in AddCustomer: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    public void UpdateCustomer(Customer customer)
+    {
+        if (customer == null)
+        {
+            throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
         }
 
-        public void Add(Customer customer)
+        var existingCustomer = _context.Customers.Find(customer.ID);
+        if (existingCustomer == null)
         {
-            customers.Add(customer);
+            throw new KeyNotFoundException($"Customer with ID {customer.ID} not found for update.");
         }
 
-        public void Update(Customer customer)
+        _context.Entry(existingCustomer).CurrentValues.SetValues(customer);
+        _context.SaveChanges();
+    }
+
+    public void DeleteCustomer(int id)
+    {
+        var customer = _context.Customers.Find(id);
+        if (customer == null)
         {
-            var existingCustomer = customers.FirstOrDefault(c => c.ID == customer.ID);
-            if (existingCustomer != null)
-            {
-                existingCustomer.Name = customer.Name;
-            }
+            throw new KeyNotFoundException($"Customer with ID {id} not found for deletion.");
         }
 
-        public void Delete(int id)
-        {
-            var customer = customers.FirstOrDefault(c => c.ID == id);
-            if (customer != null)
-            {
-                customers.Remove(customer);
-            }
-        }
+        _context.Customers.Remove(customer);
+        _context.SaveChanges();
     }
 }

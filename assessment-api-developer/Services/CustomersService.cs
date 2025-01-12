@@ -1,9 +1,6 @@
 ﻿using assessment_platform_developer.Models;
-using assessment_platform_developer.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace assessment_platform_developer.Services
 {
@@ -18,37 +15,63 @@ namespace assessment_platform_developer.Services
 
     public class CustomerService : ICustomerService
     {
-        private readonly ICustomerRepository customerRepository;
+        private readonly ICustomerRepository _customerRepository;
 
+        // Constructor injection for the repository
         public CustomerService(ICustomerRepository customerRepository)
         {
-            this.customerRepository = customerRepository;
+            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository), "CustomerRepository is null");
         }
 
         public IEnumerable<Customer> GetAllCustomers()
         {
-            return customerRepository.GetAll();
+            return _customerRepository.GetAllCustomers();
         }
 
         public Customer GetCustomer(int id)
         {
-            return customerRepository.Get(id);
+            var customer = _customerRepository.GetCustomer(id);
+            if (customer == null)
+            {
+                throw new KeyNotFoundException($"Customer with ID {id} not found.");
+            }
+            return customer;
         }
 
         public void AddCustomer(Customer customer)
         {
-            customerRepository.Add(customer);
+            if (customer == null)
+            {
+                throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
+            }
+            _customerRepository.AddCustomer(customer);
         }
 
         public void UpdateCustomer(Customer customer)
         {
-            customerRepository.Update(customer);
+            if (customer == null)
+            {
+                throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
+            }
+
+            var existingCustomer = _customerRepository.GetCustomer(customer.ID);
+            if (existingCustomer == null)
+            {
+                throw new KeyNotFoundException($"Customer with ID {customer.ID} not found for update.");
+            }
+
+            _customerRepository.UpdateCustomer(customer);
         }
 
         public void DeleteCustomer(int id)
         {
-            customerRepository.Delete(id);
+            var existingCustomer = _customerRepository.GetCustomer(id);
+            if (existingCustomer == null)
+            {
+                throw new KeyNotFoundException($"Customer with ID {id} not found for deletion.");
+            }
+
+            _customerRepository.DeleteCustomer(id);
         }
     }
-
 }

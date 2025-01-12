@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using assessment_platform_developer.Services;
 using Container = SimpleInjector.Container;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace assessment_platform_developer
 {
@@ -98,8 +97,8 @@ namespace assessment_platform_developer
 			CustomersDDL.Items.Add(new ListItem("Add new customer"));
 		}
 
-		protected void AddButton_Click(object sender, EventArgs e)
-		{
+        protected async void AddButton_Click(object sender, EventArgs e)
+        {
 			var customer = new Customer
 			{
 				Name = CustomerName.Text,
@@ -116,25 +115,38 @@ namespace assessment_platform_developer
 				ContactEmail = CustomerEmail.Text
 			};
 
-			var testContainer = (Container)HttpContext.Current.Application["DIContainer"];
-			var customerService = testContainer.GetInstance<ICustomerService>();
-			customerService.AddCustomer(customer);
-			customers.Add(customer);
+            string apiUrl = "https://localhost:44358/api/customers";
 
-			CustomersDDL.Items.Add(new ListItem(customer.Name));
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    string jsonData = JsonConvert.SerializeObject(customer);
+                    var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                    var contents =  content.ReadAsStringAsync().Result;
+                    HttpResponseMessage response = await httpClient.PostAsync(apiUrl, content);
 
-			CustomerName.Text = string.Empty;
-			CustomerAddress.Text = string.Empty;
-			CustomerEmail.Text = string.Empty;
-			CustomerPhone.Text = string.Empty;
-			CustomerCity.Text = string.Empty;
-			StateDropDownList.SelectedIndex = 0;
-			CustomerZip.Text = string.Empty;
-			CountryDropDownList.SelectedIndex = 0;
-			CustomerNotes.Text = string.Empty;
-			ContactName.Text = string.Empty;
-			ContactPhone.Text = string.Empty;
-			ContactEmail.Text = string.Empty;
-		}
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseContent = await response.Content.ReadAsStringAsync();
+
+                        customers.Add(customer);
+                        CustomersDDL.Items.Add(new ListItem(customer.Name));
+
+                        Response.Write("<script>alert('Customer added successfully!');</script>");
+                    }
+                    else
+                    {
+                        string errorContent = await response.Content.ReadAsStringAsync();
+                        Response.Write($"<script>alert('Failed to add customer: {errorContent}');</script>");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log or display the error
+                Response.Write($"<script>alert('An error occurred: {ex.Message}');</script>");
+            }
+        }
 	}
 }
