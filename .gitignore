@@ -2,7 +2,6 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-Migrations/
 /.vs/assessment-api-developer/v17
 /.vs/assessment-api-developer/FileContentIndex
 /assessment-api-developer/bin/assessment-platform-developer.dll
