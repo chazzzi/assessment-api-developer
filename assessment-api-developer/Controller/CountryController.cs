@@ -1,6 +1,7 @@
-using System.Web.Http;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
+using System.Web.Http;
 
 namespace assessment_platform_developer.Controllers
 {
@@ -16,17 +17,17 @@ namespace assessment_platform_developer.Controllers
 
         [HttpGet]
         [Route("api/countries")]
-        public IHttpActionResult GetCountries()
+        public async Task<IHttpActionResult> GetCountries()
         {
-            var countries = _countryService.GetAllCountries();
+            var countries = await _countryService.GetAllCountriesAsync();
             return Ok(countries.Select(c => new { c.ID, c.Name }));
         }
 
         [HttpGet]
         [Route("api/countries/{countryId}/states")]
-        public IHttpActionResult GetStatesByCountry(int countryId)
+        public async Task<IHttpActionResult> GetStatesByCountry(int countryId)
         {
-            var states = _countryService.GetStatesByCountry(countryId);
+            var states = await _countryService.GetStatesByCountryAsync(countryId);
             return Ok(states.Select(s => new { s.ID, s.Name }));
         }
     }

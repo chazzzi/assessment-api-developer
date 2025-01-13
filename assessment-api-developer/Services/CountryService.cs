@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using assessment_platform_developer.Models;
+
 public interface ICountryService
 {
-    IEnumerable<Country> GetAllCountries();
-    IEnumerable<State> GetStatesByCountry(int countryId);
+    Task<IEnumerable<Country>> GetAllCountriesAsync();
+    Task<IEnumerable<State>> GetStatesByCountryAsync(int countryId);
 }
 
 public class CountryService : ICountryService
@@ -12,16 +15,16 @@ public class CountryService : ICountryService
 
     public CountryService(ICountryRepository countryRepository)
     {
-        _countryRepository = countryRepository;
+        _countryRepository = countryRepository ?? throw new ArgumentNullException(nameof(countryRepository), "CountryRepository is null");
     }
 
-    public IEnumerable<Country> GetAllCountries()
+    public async Task<IEnumerable<Country>> GetAllCountriesAsync()
     {
-        return _countryRepository.GetAllCountries();
+        return await _countryRepository.GetAllCountriesAsync();
     }
 
-    public IEnumerable<State> GetStatesByCountry(int countryId)
+    public async Task<IEnumerable<State>> GetStatesByCountryAsync(int countryId)
     {
-        return _countryRepository.GetStatesByCountry(countryId);
+        return await _countryRepository.GetStatesByCountryAsync(countryId);
     }
 }

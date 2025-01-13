@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 using assessment_platform_developer.Models;
 
 public class CountryRepository : ICountryRepository
@@ -8,16 +11,18 @@ public class CountryRepository : ICountryRepository
 
     public CountryRepository(AssessmentDbContext context)
     {
-        _context = context;
+        _context = context ?? throw new ArgumentNullException(nameof(context), "AssessmentDbContext cannot be null.");
     }
 
-    public IEnumerable<Country> GetAllCountries()
+    public async Task<IEnumerable<Country>> GetAllCountriesAsync()
     {
-        return _context.Countries.ToList();
+        return await _context.Countries.ToListAsync();
     }
 
-    public IEnumerable<State> GetStatesByCountry(int countryId)
+    public async Task<IEnumerable<State>> GetStatesByCountryAsync(int countryId)
     {
-        return _context.States.Where(s => s.CountryID == countryId).ToList();
+        return await _context.States
+            .Where(s => s.CountryID == countryId)
+            .ToListAsync();
     }
 }
