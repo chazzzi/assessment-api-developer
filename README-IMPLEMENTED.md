@@ -6,7 +6,6 @@
 Create a `.env` file in the root directory of your project with the following format:
 
 ```
-PORT=8001
 DB_HOST=localhost
 DB_INSTANCE=SQLEXPRESS
 DB_SCHEMA=Assessment
