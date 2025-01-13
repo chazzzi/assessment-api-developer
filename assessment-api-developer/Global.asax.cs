@@ -92,7 +92,7 @@ namespace assessment_platform_developer
 
             config.Save(ConfigurationSaveMode.Modified);
             ConfigurationManager.RefreshSection("connectionStrings");
-
+      
             // Register routes, bundles, and APIs
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
@@ -112,7 +112,10 @@ namespace assessment_platform_developer
             // Register DbContext and repository
             container.Register<AssessmentDbContext>(Lifestyle.Scoped);
             container.Register<ICustomerRepository, CustomerRepository>(Lifestyle.Scoped);
-            container.Register<ICustomerService, CustomerService>(Lifestyle.Scoped); // Added service registration
+            container.Register<ICustomerService, CustomerService>(Lifestyle.Scoped);
+
+            container.Register<ICountryRepository, CountryRepository>(Lifestyle.Scoped);
+            container.Register<ICountryService, CountryService>(Lifestyle.Scoped);
 
             // Register Web Pages
             RegisterWebPages(container);

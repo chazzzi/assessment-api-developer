@@ -108,12 +108,16 @@
                                 <asp:Label ID="CustomerZipLabel" runat="server" Text="Postal/Zip Code" CssClass="form-label"></asp:Label>
                                 <asp:TextBox ID="CustomerZip" runat="server" CssClass="form-control"></asp:TextBox>
                             </div>
-
                             <div class="form-group">
                                 <asp:Label ID="CustomerCountryLabel" runat="server" Text="Country" CssClass="form-label"></asp:Label>
-                                <asp:DropDownList ID="CountryDropDownList" runat="server" CssClass="form-control" />
+                                <asp:DropDownList 
+                                    ID="CountryDropDownList" 
+                                    runat="server" 
+                                    CssClass="form-control" 
+                                    AutoPostBack="true" 
+                                    OnSelectedIndexChanged="CountryDropDownList_SelectedIndexChanged">
+                                </asp:DropDownList>
                             </div>
-
                             <div class="form-group">
                                 <asp:Label ID="CustomerNotesLabel" runat="server" Text="Notes" CssClass="form-label"></asp:Label>
                                 <asp:TextBox ID="CustomerNotes" runat="server" CssClass="form-control"></asp:TextBox>

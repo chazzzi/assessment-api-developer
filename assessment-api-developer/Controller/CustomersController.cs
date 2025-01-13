@@ -28,6 +28,7 @@ namespace assessment_platform_developer.Controllers
         {
             var customer = customerService.GetCustomer(id);
             if (customer == null) return NotFound();
+
             return Ok(customer);
         }
 
