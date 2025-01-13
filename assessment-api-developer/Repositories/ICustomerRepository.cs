@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using assessment_platform_developer.Models;
+
 public interface ICustomerRepository
 {
-    IEnumerable<Customer> GetAllCustomers();
-    Customer GetCustomer(int id);
-    void AddCustomer(Customer customer);
-    void UpdateCustomer(Customer customer);
-    void DeleteCustomer(int id);
+    Task<IEnumerable<Customer>> GetAllCustomersAsync();
+    Task<Customer> GetCustomerAsync(int id);
+    Task AddCustomerAsync(Customer customer);
+    Task UpdateCustomerAsync(Customer customer);
+    Task DeleteCustomerAsync(int id);
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 using assessment_platform_developer.Models;
 
 public class CustomerRepository : ICustomerRepository
@@ -13,9 +14,9 @@ public class CustomerRepository : ICustomerRepository
         _context = context ?? throw new ArgumentNullException(nameof(context), "AssessmentDbContext cannot be null.");
     }
 
-    public IEnumerable<Customer> GetAllCustomers()
+    public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
     {
-        var customers = _context.Customers
+        var customers = await _context.Customers
             .Select(c => new
             {
                 c.ID,
@@ -34,35 +35,33 @@ public class CustomerRepository : ICustomerRepository
                 c.ContactTitle,
                 c.ContactNotes
             })
-            .ToList()
-            .Select(c => new Customer
-            {
-                ID = c.ID,
-                Name = c.Name,
-                Address = c.Address,
-                Email = c.Email,
-                Phone = c.Phone,
-                City = c.City,
-                StateID = c.StateID,
-                Zip = c.Zip,
-                CountryID = c.CountryID,
-                Notes = c.Notes,
-                ContactName = c.ContactName,
-                ContactPhone = c.ContactPhone,
-                ContactEmail = c.ContactEmail,
-                ContactTitle = c.ContactTitle,
-                ContactNotes = c.ContactNotes
-            });
+            .ToListAsync();
 
-        return customers;
+        return customers.Select(c => new Customer
+        {
+            ID = c.ID,
+            Name = c.Name,
+            Address = c.Address,
+            Email = c.Email,
+            Phone = c.Phone,
+            City = c.City,
+            StateID = c.StateID,
+            Zip = c.Zip,
+            CountryID = c.CountryID,
+            Notes = c.Notes,
+            ContactName = c.ContactName,
+            ContactPhone = c.ContactPhone,
+            ContactEmail = c.ContactEmail,
+            ContactTitle = c.ContactTitle,
+            ContactNotes = c.ContactNotes
+        });
     }
-
-    public Customer GetCustomer(int id)
+    public async Task<Customer> GetCustomerAsync(int id)
     {
-        var customer = _context.Customers
-            .Include(c => c.State)  
-            .Include(c => c.Country) 
-            .FirstOrDefault(c => c.ID == id);
+        var customer = await _context.Customers
+            .Include(c => c.State)
+            .Include(c => c.Country)
+            .FirstOrDefaultAsync(c => c.ID == id);
 
         if (customer == null)
         {
@@ -71,8 +70,7 @@ public class CustomerRepository : ICustomerRepository
 
         return customer;
     }
-
-    public void AddCustomer(Customer customer)
+    public async Task AddCustomerAsync(Customer customer)
     {
         if (customer == null)
         {
@@ -82,7 +80,7 @@ public class CustomerRepository : ICustomerRepository
         try
         {
             _context.Customers.Add(customer);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -90,33 +88,31 @@ public class CustomerRepository : ICustomerRepository
             throw;
         }
     }
-
-    public void UpdateCustomer(Customer customer)
+    public async Task UpdateCustomerAsync(Customer customer)
     {
         if (customer == null)
         {
             throw new ArgumentNullException(nameof(customer), "Customer cannot be null.");
         }
 
-        var existingCustomer = _context.Customers.Find(customer.ID);
+        var existingCustomer = await _context.Customers.FindAsync(customer.ID);
         if (existingCustomer == null)
         {
             throw new KeyNotFoundException($"Customer with ID {customer.ID} not found.");
         }
 
         _context.Entry(existingCustomer).CurrentValues.SetValues(customer);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
-
-    public void DeleteCustomer(int id)
+    public async Task DeleteCustomerAsync(int id)
     {
-        var customer = _context.Customers.Find(id);
+        var customer = await _context.Customers.FindAsync(id);
         if (customer == null)
         {
             throw new KeyNotFoundException($"Customer with ID {id} not found.");
         }
 
         _context.Customers.Remove(customer);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 }

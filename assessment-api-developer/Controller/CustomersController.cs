@@ -1,6 +1,6 @@
 using assessment_platform_developer.Models;
 using assessment_platform_developer.Services;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 
@@ -8,55 +8,65 @@ namespace assessment_platform_developer.Controllers
 {
     public class CustomersController : ApiController
     {
-        private readonly ICustomerService customerService;
+        private readonly ICustomerService _customerService;
 
         public CustomersController()
         {
             // Dependency injection should be configured
             var container = (SimpleInjector.Container)HttpContext.Current.Application["DIContainer"];
-            customerService = container.GetInstance<ICustomerService>();
+            _customerService = container.GetInstance<ICustomerService>();
         }
 
         [HttpGet]
-        public IEnumerable<Customer> Get()
+        public async Task<IHttpActionResult> Get()
         {
-            return customerService.GetAllCustomers();
+            var customers = await _customerService.GetAllCustomersAsync();
+            return Ok(customers);
         }
 
         [HttpGet]
-        public IHttpActionResult Get(int id)
+        public async Task<IHttpActionResult> Get(int id)
         {
-            var customer = customerService.GetCustomer(id);
-            if (customer == null) return NotFound();
+            var customer = await _customerService.GetCustomerAsync(id);
+            if (customer == null)
+                return NotFound();
 
             return Ok(customer);
         }
 
         [HttpPost]
-        public IHttpActionResult Post([FromBody] Customer customer)
+        public async Task<IHttpActionResult> Post([FromBody] Customer customer)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            customerService.AddCustomer(customer);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _customerService.AddCustomerAsync(customer);
             return CreatedAtRoute("DefaultApi", new { id = customer.ID }, customer);
         }
 
         [HttpPut]
-        public IHttpActionResult Put(int id, [FromBody] Customer customer)
+        public async Task<IHttpActionResult> Put(int id, [FromBody] Customer customer)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var existingCustomer = customerService.GetCustomer(id);
-            if (existingCustomer == null) return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var existingCustomer = await _customerService.GetCustomerAsync(id);
+            if (existingCustomer == null)
+                return NotFound();
+
             customer.ID = id;
-            customerService.UpdateCustomer(customer);
+            await _customerService.UpdateCustomerAsync(customer);
             return Ok(customer);
         }
 
         [HttpDelete]
-        public IHttpActionResult Delete(int id)
+        public async Task<IHttpActionResult> Delete(int id)
         {
-            var customer = customerService.GetCustomer(id);
-            if (customer == null) return NotFound();
-            customerService.DeleteCustomer(id);
+            var customer = await _customerService.GetCustomerAsync(id);
+            if (customer == null)
+                return NotFound();
+
+            await _customerService.DeleteCustomerAsync(id);
             return StatusCode(System.Net.HttpStatusCode.NoContent);
         }
     }
