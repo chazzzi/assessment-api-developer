@@ -12,9 +12,13 @@ namespace assessment_platform_developer.Controllers
 
         public CustomersController()
         {
-            // Dependency injection should be configured
             var container = (SimpleInjector.Container)HttpContext.Current.Application["DIContainer"];
             _customerService = container.GetInstance<ICustomerService>();
+        }
+
+        public CustomersController(ICustomerService customerService)
+        {
+            _customerService = customerService ?? throw new System.ArgumentNullException(nameof(customerService));
         }
 
         [HttpGet]
